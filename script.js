@@ -1,11 +1,13 @@
 let player;
 let videoList = [
-  "M7lc1UVf-VE", // Replace these with real video IDs
+  "M7lc1UVf-VE",
   "dQw4w9WgXcQ",
   "eY52Zsg-KVI",
   "oHg5SJYRHA0"
 ];
 let currentVideoIndex = 0;
+let lastGesture = "";
+let lastGestureTime = 0;
 
 function onYouTubeIframeAPIReady() {
   player = new YT.Player("player", {
@@ -79,19 +81,12 @@ function initializeHands() {
       const gesture = recognizeGesture(landmarks);
       document.getElementById("gesture-name").textContent = gesture;
 
-      if (gesture === "Fist") {
-        player?.playVideo();
-      } else if (gesture === "Palm") {
-        player?.pauseVideo();
-      } else if (gesture === "Index") {
-        let vol = player.getVolume();
-        if (vol < 100) player.setVolume(vol + 5);
-      } else if (gesture === "Two Fingers") {
-        let vol = player.getVolume();
-        if (vol > 0) player.setVolume(vol - 5);
-      } else if (gesture === "Three Fingers") {
-        currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-        player.loadVideoById(videoList[currentVideoIndex]);
+      const now = Date.now();
+      if (gesture !== lastGesture || now - lastGestureTime > 1500) {
+        lastGesture = gesture;
+        lastGestureTime = now;
+
+        handleGesture(gesture);
       }
     } else {
       document.getElementById("gesture-name").textContent = "None";
@@ -101,22 +96,49 @@ function initializeHands() {
   camera.start();
 }
 
+function handleGesture(gesture) {
+  if (!player) return;
+
+  switch (gesture) {
+    case "Fist":
+      player.playVideo();
+      break;
+    case "Palm":
+      player.pauseVideo();
+      break;
+    case "Index":
+      let volUp = player.getVolume();
+      if (volUp < 100) player.setVolume(volUp + 10);
+      break;
+    case "Two Fingers":
+      let volDown = player.getVolume();
+      if (volDown > 0) player.setVolume(volDown - 10);
+      break;
+    case "Three Fingers":
+      currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
+      player.loadVideoById(videoList[currentVideoIndex]);
+      break;
+  }
+}
+
 function recognizeGesture(landmarks) {
-  const isFingerUp = (tipIndex) => landmarks[tipIndex].y < landmarks[tipIndex - 2].y;
+  const isFingerUp = (tipIndex, dipIndex) =>
+    landmarks[tipIndex].y < landmarks[dipIndex].y - 0.03;
 
-  const indexUp = isFingerUp(8);
-  const middleUp = isFingerUp(12);
-  const ringUp = isFingerUp(16);
-  const pinkyUp = isFingerUp(20);
-  const thumbUp = landmarks[4].x < landmarks[3].x; // thumb extended left
+  const indexUp = isFingerUp(8, 6);
+  const middleUp = isFingerUp(12, 10);
+  const ringUp = isFingerUp(16, 14);
+  const pinkyUp = isFingerUp(20, 18);
+  const thumbOut = Math.abs(landmarks[4].x - landmarks[3].x) > 0.05;
 
-  const upCount = [indexUp, middleUp, ringUp, pinkyUp, thumbUp].filter(Boolean).length;
+  const fingers = [thumbOut, indexUp, middleUp, ringUp, pinkyUp];
+  const upCount = fingers.filter(Boolean).length;
 
-  if (!indexUp && !middleUp && !ringUp && !pinkyUp && !thumbUp) return "Fist";
-  if (indexUp && middleUp && ringUp && pinkyUp && thumbUp) return "Palm";
-  if (indexUp && !middleUp && !ringUp && !pinkyUp && !thumbUp) return "Index";
-  if (indexUp && middleUp && !ringUp && !pinkyUp && !thumbUp) return "Two Fingers";
-  if (indexUp && middleUp && ringUp && !pinkyUp && !thumbUp) return "Three Fingers";
+  if (!thumbOut && !indexUp && !middleUp && !ringUp && !pinkyUp) return "Fist";
+  if (thumbOut && indexUp && middleUp && ringUp && pinkyUp) return "Palm";
+  if (!thumbOut && indexUp && !middleUp && !ringUp && !pinkyUp) return "Index";
+  if (!thumbOut && indexUp && middleUp && !ringUp && !pinkyUp) return "Two Fingers";
+  if (!thumbOut && indexUp && middleUp && ringUp && !pinkyUp) return "Three Fingers";
 
   return "Unknown";
 }
