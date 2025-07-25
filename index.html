@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Gesture Controller</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>YouTube Gesture Controller</h1>
+    <input type="text" id="video-url" placeholder="Paste YouTube URL here">
+    <button id="load-video">Load Video</button>
+
+    <div id="player" class="yt-player"></div>
+    <video id="webcam" autoplay muted playsinline></video>
+    <canvas id="gesture-canvas"></canvas>
+
+    <p><strong>Gesture Detected:</strong> <span id="gesture-name">None</span></p>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

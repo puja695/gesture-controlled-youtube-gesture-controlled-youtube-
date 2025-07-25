@@ -1,0 +1,45 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f3f3f3;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+}
+
+#video-url {
+  width: 60%;
+  padding: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  margin-left: 10px;
+}
+
+#player {
+  margin-top: 20px;
+}
+
+#webcam, #gesture-canvas {
+  width: 480px;
+  height: 270px;
+  position: absolute;
+  top: 430px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid #000;
+}
+
+#gesture-canvas {
+  z-index: 2;
+}
+
+#gesture-name {
+  font-size: 1.2em;
+  color: #444;
+}
