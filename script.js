@@ -8,6 +8,7 @@ let videoList = [
 let currentVideoIndex = 0;
 let lastGesture = "";
 let lastGestureTime = 0;
+let playerReady = false;
 
 function onYouTubeIframeAPIReady() {
   player = new YT.Player("player", {
@@ -18,16 +19,21 @@ function onYouTubeIframeAPIReady() {
       autoplay: 0,
       controls: 1,
     },
+    events: {
+      onReady: () => {
+        playerReady = true;
+      }
+    }
   });
 }
 
 function loadCustomVideo() {
   const url = document.getElementById("video-url").value.trim();
   const videoId = extractVideoId(url);
-  if (videoId && player) {
+  if (videoId && playerReady) {
     player.loadVideoById(videoId);
   } else {
-    alert("Invalid YouTube URL");
+    alert("Invalid YouTube URL or player not ready");
   }
 }
 
@@ -97,7 +103,7 @@ function initializeHands() {
 }
 
 function handleGesture(gesture) {
-  if (!player) return;
+  if (!playerReady || !player) return;
 
   switch (gesture) {
     case "Fist":
@@ -132,7 +138,6 @@ function recognizeGesture(landmarks) {
   const thumbOut = Math.abs(landmarks[4].x - landmarks[3].x) > 0.05;
 
   const fingers = [thumbOut, indexUp, middleUp, ringUp, pinkyUp];
-  const upCount = fingers.filter(Boolean).length;
 
   if (!thumbOut && !indexUp && !middleUp && !ringUp && !pinkyUp) return "Fist";
   if (thumbOut && indexUp && middleUp && ringUp && pinkyUp) return "Palm";
@@ -152,5 +157,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Enter") loadCustomVideo();
   });
 
-  window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+  // Load YT API script
+  const tag = document.createElement("script");
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.body.appendChild(tag);
 });
